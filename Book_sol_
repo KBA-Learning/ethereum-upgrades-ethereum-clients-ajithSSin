@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+contract Books{
+
+    struct book{
+        string title;
+        string genre;
+        address owner;
+        bool status;
+        uint256 price;
+    }
+    mapping(uint256=>book) public bookDetails;
+
+    address public admin;
+
+// constructor
+constructor() {
+    admin=msg.sender;
+}
+
+modifier onlyAdmin{
+    require(msg.sender==admin,"unauthorised access");
+    _;
+}
+
+    function addBook(
+        uint256 _id,
+        string memory _title,
+        string memory _genre,        
+        bool _status,
+        uint256 _price) public onlyAdmin{
+
+            address _owner=msg.sender;
+            //require(msg.sender==admin,"unauthorised access")
+            //bookDetails[_id]._title=_title
+            
+            //storing particular data 
+            bookDetails[_id]=book(_title,_genre,_owner,_status,_price);
+        }
+
+    modifier bookExists(uint256 _id) {
+        require(bookDetails[_id].owner != address(0), "Book does not exist");
+        _;
+    }
+
+        //function to anny user can buy books
+    function buyBook(uint256 _id) public payable bookExists(_id){
+            
+        book storage newObj = bookDetails[_id];//new object of book is created
+
+        require(newObj.status == true, "Book not available for sale");
+        //status check for availablility
+
+        require(msg.value==newObj.price,"Price not matching");
+        //price check for matching
+
+        payable(newObj.owner).transfer(msg.value);
+       
+        newObj.status = false; // mark as sold 
+
+        }
+}
